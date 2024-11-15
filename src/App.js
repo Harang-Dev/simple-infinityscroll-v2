@@ -1,25 +1,50 @@
-import logo from './logo.svg';
-import './App.css';
+import React, { useEffect } from 'react';
+import { Card, Row, Col, Spin } from 'antd';
+import styled from 'styled-components';
+import useGetPokemons from './useGetPokemons.js';
+import { useInView } from 'react-intersection-observer';
 
-function App() {
+const Container = styled.div`
+  padding: 20px;
+  width: 800px;
+  height: auto;
+`;
+
+const App = () => {
+  const { data, isLoading, error, fetchNextPage, hasNextPage, isFetchingNextPage } = useGetPokemons();
+  const { ref, inView } = useInView();
+
+  useEffect(() => {
+    if (inView && hasNextPage && !isFetchingNextPage) {
+      setTimeout(() => {
+        fetchNextPage();
+      }, 1000);
+    }
+
+  }, [inView]);
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <Container>
+      <h1>포켓몬 사전</h1>
+      <Row gutter={[16, 16]}>
+        {data?.pages.flatMap(page =>
+          page.results.map((pokemon) => (
+            <Col span={8} key={pokemon.name}>
+              <Card
+                hoverable
+                cover={<img alt={pokemon.name} src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${pokemon.url.split('/')[6]}.png`} />}
+              >
+                <Card.Meta title={pokemon.name} />
+              </Card>
+            </Col>
+          ))
+        )}
+      </Row>
+      <div>
+        <h1 ref={ref}>Load More</h1>
+      </div>
+    </Container>
   );
-}
+};
 
 export default App;
